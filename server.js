@@ -149,31 +149,35 @@ app.post("/add-solved", auth, async (req, res) => {
     if (!(questionID && date)) {
       res.status(400).send("All input is required");
     }
-    const old = await Participant.findOne({ user_id: req.user_id });
+    const old = await Participant.findOne({ user_id: req.user.user_id });
+    console.log(old);
     if (old) {
-      var temp = old.solvedQuestions;
-      var adata = {
-        questionID: questionID,
-        date: date,
-        solved: false,
-      };
-      if (!arr.includes(adata)) temp.push(adata);
-      await Participant.updateOne(
+      var arr1 = old.questions;
+      var arr2 = old.dates;
+      var arr3 = old.solved;
+
+      if (!arr1.includes(questionID)) {
+        arr1.push(questionID);
+        arr2.push(date);
+        arr3.push(false);
+      }
+      await Participant.updateMany(
         { user_id: req.user.user_id },
-        { solvedQuestions: temp }
+        { questions: arr1, dates: arr2, solved: arr3 }
       );
       res.status(201).send("done updating");
     } else {
-      var arr = [];
-      var adata = {
-        questionID: questionID,
-        date: date,
-        solved: false,
-      };
-      if (!arr.includes(adata)) arr.push(adata);
+      var arr1 = [];
+      var arr2 = [];
+      var arr3 = [];
+      arr1.push(questionID);
+      arr2.push(date);
+      arr3.push(false);
       const participant = new Participant({
         user_id: req.user.user_id,
-        solvedQuestions: arr,
+        questions: arr1,
+        dates: arr2,
+        solved: arr3,
       });
       participant.save();
       res.status(201).json(participant);
