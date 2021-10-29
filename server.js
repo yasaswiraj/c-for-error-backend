@@ -143,6 +143,46 @@ app.post("/get-question", auth, async (req, res) => {
   }
 });
 
+app.post("/add-solved", auth, async (req, res) => {
+  try {
+    const { questionID, date } = req.body;
+    if (!(questionID && date)) {
+      res.status(400).send("All input is required");
+    }
+    const old = await Participant.findOne({ user_id: req.user_id });
+    if (old) {
+      var temp = old.solvedQuestions;
+      var adata = {
+        questionID: questionID,
+        date: date,
+        solved: false,
+      };
+      if (!arr.includes(adata)) temp.push(adata);
+      await Participant.updateOne(
+        { user_id: req.user.user_id },
+        { solvedQuestions: temp }
+      );
+      res.status(201).send("done updating");
+    } else {
+      var arr = [];
+      var adata = {
+        questionID: questionID,
+        date: date,
+        solved: false,
+      };
+      if (!arr.includes(adata)) arr.push(adata);
+      const participant = new Participant({
+        user_id: req.user.user_id,
+        solvedQuestions: arr,
+      });
+      participant.save();
+      res.status(201).json(participant);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 app.listen(8080 || process.env.PORT, function () {
   console.log("Running FirstRest on Port " + process.env.PORT);
 });
