@@ -45,7 +45,7 @@ app.post("/register", async (req, res) => {
       roll_number,
       name,
       password: encryptedPassword,
-      score: 500,
+      score: 0,
     });
     user.save();
     res.status(201).json(user);
@@ -117,7 +117,7 @@ app.post("/welcome", auth, (req, res) => {
 
 app.get("/questions", auth, async (req, res) => {
   try {
-    const data1 = await Question.find({});
+    const data1 = await Question.find({ round: "one" });
     const data2 = await Participant.find({ user_id: req.user.user_id });
     var data = [];
     if (data2 && data2.length > 0) {
@@ -148,6 +148,19 @@ app.post("/set-score", auth, async (req, res) => {
     const { questionID, score } = req.body;
     if (!(questionID && score)) {
       res.status(400).send("All input is required");
+    } else {
+      const data = await User.updateOne(
+        { _id: req.user.user_id },
+        { score: parseInt(score) }
+      );
+      const data2 = await Participant.findOne({ user_id: req.user.user_id });
+      var arr = data2.solved;
+      arr[data2.questions.indexOf(questionID)] = true;
+      const p = await Participant.updateOne(
+        { user_id: req.user.user_id },
+        { solved: arr }
+      );
+      res.status(200).send(p);
     }
   } catch (err) {
     console.log(err);
