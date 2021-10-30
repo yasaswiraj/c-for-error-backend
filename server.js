@@ -117,7 +117,18 @@ app.post("/welcome", auth, (req, res) => {
 
 app.get("/questions", auth, async (req, res) => {
   try {
-    const data = await Question.find({});
+    const data1 = await Question.find({});
+    const data2 = await Participant.find({ user_id: req.user.user_id });
+    var data = [];
+    if (data2) {
+      data1.map((d) => {
+        if (
+          data2[0].questions.includes(d._id) &&
+          data2[0].solved[data2[0].questions.indexOf(d._id)]
+        );
+        else data.push(d);
+      });
+    }
     res.status(200).json(data);
   } catch (err) {
     console.log(err);
@@ -140,6 +151,27 @@ app.post("/get-question", auth, async (req, res) => {
     res.status(200).send(data);
   } catch (err) {
     console.log(err);
+  }
+});
+
+app.post("/get-date", auth, async (req, res) => {
+  try {
+    const { questionID } = req.body;
+    if (!questionID) {
+      res.status(400).send("All input is required");
+    }
+    const old = await Participant.findOne({ user_id: req.user.user_id });
+    var out = new Date();
+    if (old && old.questions.includes(questionID))
+      out = old.dates[old.questions.indexOf(questionID)];
+
+    console.log(out);
+    const data = {
+      date: out,
+    };
+    res.status(201).json(data);
+  } catch (error) {
+    console.log(error);
   }
 });
 
