@@ -120,7 +120,7 @@ app.get("/questions", auth, async (req, res) => {
     const data1 = await Question.find({});
     const data2 = await Participant.find({ user_id: req.user.user_id });
     var data = [];
-    if (data2) {
+    if (data2 && data2.length > 0) {
       data1.map((d) => {
         if (
           data2[0].questions.includes(d._id) &&
@@ -128,7 +128,7 @@ app.get("/questions", auth, async (req, res) => {
         );
         else data.push(d);
       });
-    }
+    } else data = data1;
     res.status(200).json(data);
   } catch (err) {
     console.log(err);
@@ -139,6 +139,16 @@ app.get("/get-score", auth, async (req, res) => {
   try {
     const data = await User.findById(req.user.user_id);
     res.status(200).json(data.score);
+  } catch (err) {
+    console.log(err);
+  }
+});
+app.post("/set-score", auth, async (req, res) => {
+  try {
+    const { questionID, score } = req.body;
+    if (!(questionID && score)) {
+      res.status(400).send("All input is required");
+    }
   } catch (err) {
     console.log(err);
   }
@@ -190,7 +200,7 @@ app.post("/add-solved", auth, async (req, res) => {
 
       if (!arr1.includes(questionID)) {
         arr1.push(questionID);
-        arr2.push(date);
+        arr2.push(new Date());
         arr3.push(false);
       }
       await Participant.updateMany(
@@ -203,7 +213,7 @@ app.post("/add-solved", auth, async (req, res) => {
       var arr2 = [];
       var arr3 = [];
       arr1.push(questionID);
-      arr2.push(date);
+      arr2.push(new Date());
       arr3.push(false);
       const participant = new Participant({
         user_id: req.user.user_id,
